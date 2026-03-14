@@ -113,6 +113,7 @@ async function fetchTmdb(movie, genreMap) {
       popularity: hit.popularity || 0,
       year: hit.release_date ? hit.release_date.slice(0, 4) : null,
       genres: (hit.genre_ids || []).map(id => genreMap[id]).filter(Boolean),
+      ...(movie.source === 'srf.json' ? { _raw: { ...hit, genre_names: (hit.genre_ids || []).map(id => genreMap[id]).filter(Boolean) } } : {}),
     } : null;
 
     fs.writeFileSync(cacheFile, JSON.stringify(result));
@@ -131,6 +132,7 @@ function sourceLabel(file) {
   if (file === 'arte_de.json') return 'arte.de';
   if (file === '3sat.json')    return '3sat';
   if (file === 'ard.json')     return 'ard';
+  if (file === 'srf.json')     return 'srf';
   return file;
 }
 
@@ -159,6 +161,7 @@ async function main() {
     { file: 'arte_de.json', lang: 'de-DE' },
     { file: '3sat.json',    lang: 'de-DE' },
     { file: 'ard.json',     lang: 'de-DE' },
+    { file: 'srf.json',     lang: 'de-DE' },
   ];
   const entries = sources.flatMap(({ file, lang }) =>
     JSON.parse(fs.readFileSync(file, 'utf8')).result.results.map(e => ({ ...e, lang, source: file }))
