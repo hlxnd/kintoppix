@@ -145,8 +145,9 @@ function movieRecord(movie, tmdb) {
   return {
     title,
     searchTitle: title.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase(),
-    href: escapeHtml(movie.source === 'srf.json' ? movie.url_website : (movie.url_video_hd || movie.url_video || movie.url_video_low || movie.url_website)),
+    href: escapeHtml(movie.url_video_hd || movie.url_video || movie.url_video_low || movie.url_website),
     infoHref: escapeHtml(movie.url_website),
+    hasDirectVideo: !!(movie.url_video_hd || movie.url_video || movie.url_video_low),
     channel: escapeHtml(movie.channel),
     source: sourceLabel(movie.source),
     poster: tmdb && tmdb.poster ? tmdb.poster : null,
@@ -187,7 +188,16 @@ async function main() {
   }
   let movies = [...seen.values()];
   const isTest = process.argv.includes('--test');
-  if (isTest) movies = movies.slice(0, 10);
+  if (isTest) {
+    const perSource = 3;
+    const picked = new Map();
+    for (const m of movies) {
+      const s = m.source;
+      if (!picked.has(s)) picked.set(s, []);
+      if (picked.get(s).length < perSource) picked.get(s).push(m);
+    }
+    movies = [...picked.values()].flat();
+  }
   console.log(`Unique movies: ${movies.length}${isTest ? ' (test mode)' : ''}`);
 
   // Fetch genre map in English for all sources
@@ -212,6 +222,17 @@ async function main() {
     .replace(/content\.js\?v=\d+/, `content.js?v=${version}`);
   fs.writeFileSync('index.html', html, 'utf8');
   console.log(`Written: index.html (v=${version})`);
+
+  // Prune stale cache entries no longer in the current dataset
+  const activeIds = new Set(movies.map(m => m.id.replace(/[^a-zA-Z0-9_-]/g, '_')));
+  let pruned = 0;
+  for (const f of fs.readdirSync(CACHE_DIR)) {
+    if (!activeIds.has(f.replace('.json', ''))) {
+      fs.unlinkSync(`${CACHE_DIR}/${f}`);
+      pruned++;
+    }
+  }
+  if (pruned) console.log(`Pruned ${pruned} stale cache entries.`);
 }
 
 main().catch(err => { console.error(err); process.exit(1); });

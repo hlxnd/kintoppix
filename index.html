@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>MWJW – Free Movies</title>
+  <link href="https://cdn.jsdelivr.net/npm/video.js/dist/video-js.min.css" rel="stylesheet">
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -245,6 +246,36 @@
     .card:hover .info-btn { opacity: 1; }
     .info-btn:hover { background: rgba(0,0,0,0.85); color: #fff; }
 
+    #player-modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.85);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+    }
+
+    #player-modal.open { display: flex; }
+
+    #player-wrap {
+      position: relative;
+      width: 90vw;
+      max-width: 960px;
+    }
+
+    #player-close {
+      position: absolute;
+      top: -32px;
+      right: 0;
+      background: none;
+      border: none;
+      color: #fff;
+      font-size: 1.4rem;
+      cursor: pointer;
+      line-height: 1;
+    }
+
     .genre-tag {
       font-size: 0.62rem;
       color: #999;
@@ -283,7 +314,15 @@
     <div class="grid" id="grid"></div>
   </main>
 
-  <script src="content.js?v=1773503496565"></script>
+  <div id="player-modal">
+    <div id="player-wrap">
+      <button id="player-close">✕</button>
+      <video id="player" class="video-js vjs-big-play-centered vjs-fluid" controls preload="auto"></video>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/video.js/dist/video.min.js"></script>
+  <script src="content.js?v=1773512226105"></script>
   <script>
     const grid = document.getElementById('grid');
     const input = document.getElementById('search');
@@ -303,12 +342,33 @@
     });
     const genreCheckboxes = genreMenu.querySelectorAll('input[type=checkbox]');
 
+    // VideoJS player setup
+    const modal = document.getElementById('player-modal');
+    const player = videojs('player', { fluid: true });
+
+    function openPlayer(url) {
+      player.src({ type: url.endsWith('m3u8') ? 'application/x-mpegURL' : undefined, src: url });
+      player.load();
+      modal.classList.add('open');
+      player.play();
+    }
+
+    function closePlayer() {
+      player.pause();
+      player.src('');
+      modal.classList.remove('open');
+    }
+
+    document.getElementById('player-close').addEventListener('click', closePlayer);
+    modal.addEventListener('click', e => { if (e.target === modal) closePlayer(); });
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') closePlayer(); });
+
     function buildCard(m) {
       const a = document.createElement('a');
       a.className = 'card';
       a.href = m.href;
-      a.target = '_blank';
-      a.rel = 'noopener';
+      if (!m.hasDirectVideo) { a.target = '_blank'; a.rel = 'noopener'; }
+      a.dataset.videoSrc = m.hasDirectVideo ? m.href : '';
       a.dataset.title = m.searchTitle;
       a.dataset.source = m.source;
       a.dataset.rating = m.rating;
@@ -341,6 +401,14 @@
           <div class="card-meta">${rating}${duration}<span class="channel">${m.channel}</span>${year}</div>
           ${genreTags ? `<div class="genres">${genreTags}</div>` : ''}
         </div>`;
+      if (m.hasDirectVideo) {
+        a.addEventListener('click', e => {
+          if (e.target.closest('.info-btn')) return;
+          e.preventDefault();
+          openPlayer(m.href);
+        });
+      }
+
       return a;
     }
 

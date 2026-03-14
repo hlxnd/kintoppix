@@ -10,7 +10,7 @@ curl 'https://mediathekviewweb.de/api/query' -H 'content-type: application/json'
   "future": false,
   "offset": 0,
   "size": 1000
-}' > /c/dev/p/MWJW/arte_fr.json
+}' > arte_fr.json
 
 curl 'https://mediathekviewweb.de/api/query' -H 'content-type: application/json' --data '{
   "queries": [
@@ -22,7 +22,7 @@ curl 'https://mediathekviewweb.de/api/query' -H 'content-type: application/json'
   "future": false,
   "offset": 0,
   "size": 1000
-}' > /c/dev/p/MWJW/arte_de.json
+}' > arte_de.json
 
 curl 'https://mediathekviewweb.de/api/query' -H 'content-type: application/json' --data '{
   "queries": [
@@ -34,4 +34,30 @@ curl 'https://mediathekviewweb.de/api/query' -H 'content-type: application/json'
   "future": false,
   "offset": 0,
   "size": 1000
-}' > /c/dev/p/MWJW/3sat.json
+}' > 3sat.json
+
+curl 'https://mediathekviewweb.de/api/query' -H 'content-type: application/json' --data '{
+  "queries": [
+    {"fields": ["topic"], "query": "Filme in der"},
+    {"fields": ["channel"], "query": "ARD"}
+  ],
+  "sortBy": "timestamp",
+  "sortOrder": "desc",
+  "future": false,
+  "offset": 0,
+  "size": 1000
+}' > ard.json
+
+curl 'https://mediathekviewweb.de/api/query' -H 'content-type: application/json' --data '{
+  "queries": [
+    {"fields": ["topic"], "query": "Film"},
+    {"fields": ["channel"], "query": "SRF"}
+  ],
+  "sortBy": "timestamp",
+  "sortOrder": "desc",
+  "future": false,
+  "offset": 0,
+  "size": 1000
+}' > srf.json
+
+node clean-srf.js
