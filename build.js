@@ -121,33 +121,17 @@ function sourceLabel(file) {
   return file;
 }
 
-function buildCard(movie, tmdb) {
+function movieRecord(movie, tmdb) {
   const title = escapeHtml(movie.cleanTitle);
-  const channel = escapeHtml(movie.channel);
-  const href = escapeHtml(movie.url_website);
-  const source = sourceLabel(movie.source);
-  const rating = tmdb && tmdb.rating && tmdb.rating !== '0.0' ? tmdb.rating : '0';
-
-  const posterHtml = tmdb && tmdb.poster
-    ? `<img class="poster" src="${escapeHtml(tmdb.poster)}" alt="${title}" loading="lazy">`
-    : `<div class="poster-placeholder">${title}</div>`;
-
-  const ratingHtml = tmdb && tmdb.rating && tmdb.rating !== '0.0'
-    ? `<span class="rating">★ ${tmdb.rating}</span>`
-    : '';
-
-  const searchTitle = title.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
-  return `
-    <a class="card" href="${href}" target="_blank" rel="noopener" data-title="${searchTitle}" data-source="${source}" data-rating="${rating}">
-      ${posterHtml}
-      <div class="card-info">
-        <div class="card-title">${title}</div>
-        <div class="card-meta">
-          ${ratingHtml}
-          <span class="channel">${channel}</span>
-        </div>
-      </div>
-    </a>`.trim();
+  return {
+    title,
+    searchTitle: title.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase(),
+    href: escapeHtml(movie.url_website),
+    channel: escapeHtml(movie.channel),
+    source: sourceLabel(movie.source),
+    poster: tmdb && tmdb.poster ? tmdb.poster : null,
+    rating: tmdb && tmdb.rating && tmdb.rating !== '0.0' ? tmdb.rating : '0',
+  };
 }
 
 async function main() {
@@ -171,22 +155,25 @@ async function main() {
   const movies = [...seen.values()];
   console.log(`Unique movies: ${movies.length}`);
 
-  const template = fs.readFileSync('template.html', 'utf8');
-
-  const cards = [];
+  const records = [];
   for (let i = 0; i < movies.length; i++) {
     const movie = movies[i];
     process.stdout.write(`\rFetching TMDB [${i + 1}/${movies.length}] ${movie.cleanTitle.slice(0, 40).padEnd(40)}`);
     const tmdb = await fetchTmdb(movie);
-    cards.push(buildCard(movie, tmdb));
-    // Small delay to be respectful to TMDB rate limits
+    records.push(movieRecord(movie, tmdb));
     await new Promise(r => setTimeout(r, 100));
   }
   console.log('\nDone fetching.');
 
-  const html = template.replace('{{CARDS}}', cards.join('\n'));
+  const version = Date.now();
+  fs.writeFileSync('content.js', `window.MOVIES = ${JSON.stringify(records, null, 2)};\n`, 'utf8');
+  console.log('Written: content.js');
+
+  // Stamp cache-busting version in index.html
+  const html = fs.readFileSync('index.html', 'utf8')
+    .replace(/content\.js\?v=\d+/, `content.js?v=${version}`);
   fs.writeFileSync('index.html', html, 'utf8');
-  console.log('Written: index.html');
+  console.log(`Written: index.html (v=${version})`);
 }
 
 main().catch(err => { console.error(err); process.exit(1); });

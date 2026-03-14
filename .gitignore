@@ -1,2 +1,6 @@
 cache/
 *.json
+content.js
+.claude/
+_bmad/
+_bmad-output/
