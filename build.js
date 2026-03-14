@@ -1,7 +1,7 @@
 const fs = require('fs');
 const https = require('https');
 
-const TMDB_KEY = '8c26f4762d19f47ee529c71494b289ce';
+const TMDB_KEY = process.env.TMDB_API_KEY;
 const TMDB_IMG = 'https://image.tmdb.org/t/p/w342';
 const CACHE_VERSION = 4;
 const LOW_VOTE_THRESHOLD = 50;
@@ -117,7 +117,6 @@ async function fetchTmdb(movie, genreMap) {
       popularity: hit.popularity || 0,
       year: hit.release_date ? hit.release_date.slice(0, 4) : null,
       genres: (hit.genre_ids || []).map(id => genreMap[id]).filter(Boolean),
-      ...(movie.source === 'srf.json' ? { _raw: { ...hit, genre_names: (hit.genre_ids || []).map(id => genreMap[id]).filter(Boolean) } } : {}),
     } : null;
 
     fs.writeFileSync(cacheFile, JSON.stringify(result));
@@ -151,6 +150,7 @@ function movieRecord(movie, tmdb) {
     channel: escapeHtml(movie.channel),
     source: sourceLabel(movie.source),
     poster: tmdb && tmdb.poster ? tmdb.poster : null,
+    overview: movie.description ? escapeHtml(movie.description) : null,
     rating: tmdb && tmdb.rating && tmdb.rating !== '0.0' ? tmdb.rating : '0',
     lowConfidence: !tmdb || (tmdb.voteCount < LOW_VOTE_THRESHOLD),
     popularity: tmdb ? tmdb.popularity : 0,

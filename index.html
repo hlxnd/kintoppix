@@ -291,6 +291,134 @@
     #langDropdown .dropdown-btn { min-width: 52px; text-align: center; font-weight: 600; letter-spacing: 1px; }
     #langDropdown .dropdown-menu label { cursor: pointer; font-weight: 600; letter-spacing: 1px; }
     #langDropdown .dropdown-menu label.active { color: #c0392b; }
+
+    #detail-modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.8);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    #detail-modal.open { display: flex; }
+
+    #detail-wrap {
+      position: relative;
+      background: #181818;
+      border: 1px solid #333;
+      border-radius: 8px;
+      overflow: hidden;
+      width: 100%;
+      max-width: 780px;
+      max-height: 90vh;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: row;
+    }
+
+    #detail-close {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      z-index: 10;
+      background: rgba(0,0,0,0.65);
+      border: none;
+      color: #fff;
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      font-size: 0.95rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    #detail-close:hover { background: rgba(0,0,0,0.9); }
+
+    #detail-body {
+      flex: 1;
+      padding: 32px 28px 28px;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+    }
+
+    #detail-body h2 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 10px;
+      line-height: 1.2;
+    }
+
+    #detail-meta {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 16px;
+      font-size: 0.8rem;
+      color: #aaa;
+    }
+
+    #detail-meta .d-rating { color: #f5c518; font-weight: 700; }
+    #detail-meta .d-sep { color: #444; }
+
+    #detail-overview {
+      font-size: 0.85rem;
+      line-height: 1.65;
+      color: #ccc;
+      margin-bottom: 20px;
+      flex: 1;
+    }
+
+    #detail-actions { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+
+    #detail-watch {
+      background: #e5e5e5;
+      color: #000;
+      border: none;
+      border-radius: 4px;
+      font-size: 0.95rem;
+      font-weight: 700;
+      padding: 9px 22px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+    }
+
+    #detail-watch:hover { background: #fff; }
+
+    #detail-info-link {
+      color: #aaa;
+      font-size: 0.8rem;
+      text-decoration: none;
+    }
+
+    #detail-info-link:hover { color: #fff; }
+
+    #detail-channel {
+      font-size: 0.72rem;
+      color: #555;
+    }
+
+    #detail-poster {
+      width: 200px;
+      flex-shrink: 0;
+      background: #111;
+    }
+
+    #detail-poster img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
   </style>
 </head>
 <body>
@@ -309,6 +437,7 @@
       <div class="dropdown" id="sourceDropdown">
         <div class="dropdown-btn" id="dropdownBtn">Sources ▾</div>
         <div class="dropdown-menu">
+          <label id="sourceAllLabel" style="border-bottom:1px solid #333;margin-bottom:4px;padding-bottom:8px"><input type="checkbox" id="sourceAll" checked> <span id="sourceAllText">ALL</span></label>
           <label><input type="checkbox" value="arte.fr" checked> arte.fr</label>
           <label><input type="checkbox" value="arte.de" checked> arte.de</label>
           <label><input type="checkbox" value="3sat" checked> 3sat</label>
@@ -337,14 +466,34 @@
     </div>
   </div>
 
+  <div id="detail-modal">
+    <div id="detail-wrap">
+      <button id="detail-close">✕</button>
+      <div id="detail-body">
+        <h2 id="detail-title"></h2>
+        <div id="detail-meta"></div>
+        <p id="detail-overview"></p>
+        <div id="detail-actions">
+          <button id="detail-watch">▶ Watch</button>
+          <a id="detail-info-link" href="#" target="_blank" rel="noopener"></a>
+        </div>
+        <div id="detail-channel"></div>
+      </div>
+      <div id="detail-poster">
+        <img id="detail-img" src="" alt="">
+      </div>
+    </div>
+  </div>
+
   <script src="https://cdn.jsdelivr.net/npm/video.js/dist/video.min.js"></script>
-  <script src="content.js?v=1773518301250"></script>
+  <script src="content.js?v=1773520652506"></script>
   <script>
     const grid = document.getElementById('grid');
     const input = document.getElementById('search');
     const sourceDropdown = document.getElementById('sourceDropdown');
     const dropdownBtn = document.getElementById('dropdownBtn');
-    const sourceCheckboxes = sourceDropdown.querySelectorAll('input[type=checkbox]');
+    const sourceAllCb = document.getElementById('sourceAll');
+    const sourceCheckboxes = sourceDropdown.querySelectorAll('input[type=checkbox]:not(#sourceAll)');
     const genreDropdown = document.getElementById('genreDropdown');
     const genreDropdownBtn = document.getElementById('genreDropdownBtn');
     const genreMenu = document.getElementById('genreMenu');
@@ -395,7 +544,62 @@
 
     document.getElementById('player-close').addEventListener('click', closePlayer);
     modal.addEventListener('click', e => { if (e.target === modal) closePlayer(); });
-    document.addEventListener('keydown', e => { if (e.key === 'Escape') closePlayer(); });
+
+    // Detail modal
+    const detailModal = document.getElementById('detail-modal');
+    const detailImg = document.getElementById('detail-img');
+    const detailTitle = document.getElementById('detail-title');
+    const detailMeta = document.getElementById('detail-meta');
+    const detailOverview = document.getElementById('detail-overview');
+    const detailChannel = document.getElementById('detail-channel');
+    const detailWatch = document.getElementById('detail-watch');
+    const detailInfoLink = document.getElementById('detail-info-link');
+
+    function openDetail(m) {
+      if (m.poster) { detailImg.src = m.poster; detailImg.style.display = 'block'; }
+      else { detailImg.style.display = 'none'; }
+
+      detailTitle.textContent = m.title;
+
+      const parts = [];
+      if (m.year) parts.push(`<span>${m.year}</span>`);
+      if (m.rating !== '0') parts.push(`<span class="d-rating">★ ${m.rating}</span>`);
+      if (m.duration) parts.push(`<span>${m.duration}</span>`);
+      if (m.genres && m.genres.length) {
+        parts.push(`<span class="d-sep">·</span><span>${m.genres.map(g => {
+          const t = I18N[currentLang];
+          return t.genreMap[g] || g;
+        }).join(', ')}</span>`);
+      }
+      detailMeta.innerHTML = parts.join('<span class="d-sep"> · </span>');
+
+      detailOverview.textContent = m.overview || '';
+      detailChannel.textContent = m.channel;
+
+      const t = I18N[currentLang];
+      detailWatch.innerHTML = `▶ ${m.hasDirectVideo ? t.watch : t.open}`;
+      detailWatch.onclick = () => {
+        closeDetail();
+        if (m.hasDirectVideo) { openPlayer(m.href); }
+        else { window.open(m.href, '_blank'); }
+      };
+
+      if (m.infoHref) {
+        detailInfoLink.href = m.infoHref;
+        detailInfoLink.textContent = t.moreInfo;
+        detailInfoLink.style.display = '';
+      } else {
+        detailInfoLink.style.display = 'none';
+      }
+
+      detailModal.classList.add('open');
+    }
+
+    function closeDetail() { detailModal.classList.remove('open'); }
+
+    document.getElementById('detail-close').addEventListener('click', closeDetail);
+    detailModal.addEventListener('click', e => { if (e.target === detailModal) closeDetail(); });
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') { closePlayer(); closeDetail(); } });
 
     function buildCard(m) {
       const a = document.createElement('a');
@@ -435,13 +639,11 @@
           <div class="card-meta">${rating}${duration}<span class="channel">${m.channel}</span>${year}</div>
           ${genreTags ? `<div class="genres">${genreTags}</div>` : ''}
         </div>`;
-      if (m.hasDirectVideo) {
-        a.addEventListener('click', e => {
-          if (e.target.closest('.info-btn')) return;
-          e.preventDefault();
-          openPlayer(m.href);
-        });
-      }
+      a.addEventListener('click', e => {
+        if (e.target.closest('.info-btn')) return;
+        e.preventDefault();
+        openDetail(m);
+      });
 
       return a;
     }
@@ -484,7 +686,14 @@
     }
 
     input.addEventListener('input', applyFilters);
-    sourceCheckboxes.forEach(cb => cb.addEventListener('change', applyFilters));
+    sourceAllCb.addEventListener('change', () => {
+      sourceCheckboxes.forEach(cb => cb.checked = sourceAllCb.checked);
+      applyFilters();
+    });
+    sourceCheckboxes.forEach(cb => cb.addEventListener('change', () => {
+      sourceAllCb.checked = [...sourceCheckboxes].every(c => c.checked);
+      applyFilters();
+    }));
     genreCheckboxes.forEach(cb => cb.addEventListener('change', applyFilters));
 
     dropdownBtn.addEventListener('click', e => { e.stopPropagation(); sourceDropdown.classList.toggle('open'); });
@@ -496,6 +705,8 @@
       genreDropdown.classList.remove('open');
     });
 
+    let currentLang = 'de';
+
     const I18N = {
       de: {
         subtitle: 'Kostenlose Filme aus öffentlich-rechtlichen Mediatheken',
@@ -505,6 +716,9 @@
         genres: 'Genres ▾',
         sources: 'Sender ▾',
         all: 'ALLE',
+        watch: 'Ansehen',
+        open: 'Öffnen',
+        moreInfo: 'Mehr Infos →',
         genreMap: { 'Action':'Action','Adventure':'Abenteuer','Animation':'Animation','Comedy':'Komödie','Crime':'Krimi','Documentary':'Dokumentarfilm','Drama':'Drama','Family':'Familie','Fantasy':'Fantasy','History':'Geschichte','Horror':'Horror','Music':'Musik','Mystery':'Mystery','Romance':'Romantik','Science Fiction':'Science-Fiction','TV Movie':'TV-Film','Thriller':'Thriller','War':'Kriegsfilm','Western':'Western' }
       },
       fr: {
@@ -515,6 +729,9 @@
         genres: 'Genres ▾',
         sources: 'Chaînes ▾',
         all: 'TOUS',
+        watch: 'Regarder',
+        open: 'Ouvrir',
+        moreInfo: 'Plus d\'infos →',
         genreMap: { 'Action':'Action','Adventure':'Aventure','Animation':'Animation','Comedy':'Comédie','Crime':'Policier','Documentary':'Documentaire','Drama':'Drame','Family':'Famille','Fantasy':'Fantastique','History':'Histoire','Horror':'Horreur','Music':'Musique','Mystery':'Mystère','Romance':'Romance','Science Fiction':'Science-fiction','TV Movie':'Téléfilm','Thriller':'Thriller','War':'Guerre','Western':'Western' }
       },
       en: {
@@ -525,6 +742,9 @@
         genres: 'Genres ▾',
         sources: 'Sources ▾',
         all: 'ALL',
+        watch: 'Watch',
+        open: 'Open',
+        moreInfo: 'More info →',
         genreMap: {}
       }
     };
@@ -533,6 +753,7 @@
     const langDropdownBtn = document.getElementById('langDropdownBtn');
 
     function setLang(lang) {
+      currentLang = lang;
       const t = I18N[lang];
       document.querySelector('header h1 span').textContent = t.subtitle;
       sortSelect.options[0].textContent = t.sortPopularity;
@@ -541,6 +762,7 @@
       genreDropdownBtn.textContent = t.genres;
       dropdownBtn.textContent = t.sources;
       document.getElementById('genreAllText').textContent = t.all;
+      document.getElementById('sourceAllText').textContent = t.all;
       document.querySelectorAll('[data-genre-en]').forEach(el => {
         el.textContent = t.genreMap[el.dataset.genreEn] || el.dataset.genreEn;
       });
