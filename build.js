@@ -141,7 +141,7 @@ function movieRecord(movie, tmdb) {
   return {
     title,
     searchTitle: title.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase(),
-    href: escapeHtml(movie.url_video_hd || movie.url_video || movie.url_video_low || movie.url_website),
+    href: escapeHtml(movie.source === 'srf.json' ? movie.url_website : (movie.url_video_hd || movie.url_video || movie.url_video_low || movie.url_website)),
     infoHref: escapeHtml(movie.url_website),
     channel: escapeHtml(movie.channel),
     source: sourceLabel(movie.source),
