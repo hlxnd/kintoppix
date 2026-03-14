@@ -7,6 +7,10 @@ const CACHE_VERSION = 4;
 const LOW_VOTE_THRESHOLD = 50;
 
 function cleanTitle(title) {
+  // Extract title from «XXX» guillemet quotes if present
+  const guillemet = title.match(/«([^»]+)»/);
+  if (guillemet) return guillemet[1].trim();
+
   return title
     .replace(/\s*\(Audiodeskription\)/gi, '')
     .replace(/\s*\(mit Untertitel\)/gi, '')
@@ -167,8 +171,11 @@ async function main() {
     JSON.parse(fs.readFileSync(file, 'utf8')).result.results.map(e => ({ ...e, lang, source: file }))
   );
 
-  // Filter out audio description versions
-  const filtered = entries.filter(e => !/audiodeskription/i.test(e.title));
+  // Filter out audio description versions and entries shorter than 30 min
+  const filtered = entries.filter(e =>
+    !/audiodeskription/i.test(e.title) &&
+    (!e.duration || e.duration >= 1800)
+  );
 
   // Deduplicate by url_website (same stream = same movie)
   const seen = new Map();
