@@ -288,9 +288,80 @@
       padding: 2px 5px;
     }
 
+    footer {
+      text-align: center;
+      padding: 24px 32px;
+      font-size: 0.72rem;
+      color: #444;
+      border-top: 1px solid #1a1a1a;
+    }
+
+    footer a { color: #555; text-decoration: none; }
+    footer a:hover { color: #888; }
+
     #langDropdown .dropdown-btn { min-width: 52px; text-align: center; font-weight: 600; letter-spacing: 1px; }
     #langDropdown .dropdown-menu label { cursor: pointer; font-weight: 600; letter-spacing: 1px; }
     #langDropdown .dropdown-menu label.active { color: #c0392b; }
+
+    @media (max-width: 640px) {
+      header {
+        flex-wrap: wrap;
+        padding: 10px 14px;
+        gap: 8px;
+      }
+
+      header h1 { font-size: 1.1rem; letter-spacing: 2px; }
+      header span { display: none; }
+
+      .controls {
+        margin-left: 0;
+        width: 100%;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+
+      #sortSelect { flex: 1; min-width: 0; font-size: 0.8rem; padding: 6px 8px; }
+
+      #search { flex: 2; min-width: 0; width: auto; font-size: 0.8rem; padding: 6px 10px; }
+
+      .dropdown-btn { font-size: 0.8rem; padding: 6px 10px; }
+
+      main { padding: 10px; }
+
+      .grid {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 8px;
+      }
+
+      .card-info { padding: 5px 6px 7px; }
+      .card-title { font-size: 0.7rem; }
+      .card-meta { gap: 4px; }
+      .genres { display: none; }
+
+      #detail-modal { padding: 0; align-items: flex-end; }
+
+      #detail-wrap {
+        flex-direction: column-reverse;
+        max-width: 100%;
+        max-height: 92vh;
+        border-radius: 12px 12px 0 0;
+        border-bottom: none;
+      }
+
+      #detail-poster {
+        width: 100%;
+        height: 220px;
+        flex-shrink: 0;
+      }
+
+      #detail-body {
+        padding: 20px 18px 18px;
+      }
+
+      #detail-body h2 { font-size: 1.2rem; margin-bottom: 8px; }
+
+      #detail-overview { font-size: 0.82rem; }
+    }
 
     #detail-modal {
       display: none;
@@ -458,6 +529,10 @@
   <main>
     <div class="grid" id="grid"></div>
   </main>
+  <footer>
+    Video data provided by <a href="https://mediathekviewweb.de" target="_blank" rel="noopener">MediathekViewWeb</a>.
+    Movie metadata and artwork from <a href="https://www.themoviedb.org" target="_blank" rel="noopener">TMDb</a> — this product uses the TMDb API but is not endorsed or certified by TMDb.
+  </footer>
 
   <div id="player-modal">
     <div id="player-wrap">
