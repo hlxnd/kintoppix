@@ -1,4 +1,4 @@
-# MWJW — Project Documentation
+# Kintoppix — Project Documentation
 
 ## What is this?
 
