@@ -3,6 +3,8 @@ const https = require('https');
 
 const TMDB_KEY = '8c26f4762d19f47ee529c71494b289ce';
 const TMDB_IMG = 'https://image.tmdb.org/t/p/w342';
+const CACHE_VERSION = 4;
+const LOW_VOTE_THRESHOLD = 50;
 
 function cleanTitle(title) {
   return title
@@ -70,6 +72,11 @@ function bestMatch(results, title, sourceDesc) {
   return best;
 }
 
+async function fetchGenres(lang) {
+  const data = await get(`https://api.themoviedb.org/3/genre/movie/list?api_key=${TMDB_KEY}&language=${lang}`);
+  return Object.fromEntries((data.genres || []).map(g => [g.id, g.name]));
+}
+
 async function searchTmdb(title, lang) {
   const stripped = title.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
   const url = `https://api.themoviedb.org/3/search/movie?api_key=${TMDB_KEY}&language=${lang}&query=${encodeURIComponent(stripped)}&page=1`;
@@ -77,10 +84,11 @@ async function searchTmdb(title, lang) {
   return data.results || [];
 }
 
-async function fetchTmdb(movie) {
+async function fetchTmdb(movie, genreMap) {
   const cacheFile = `${CACHE_DIR}/${movie.id.replace(/[^a-zA-Z0-9_-]/g, '_')}.json`;
   if (fs.existsSync(cacheFile)) {
-    return JSON.parse(fs.readFileSync(cacheFile, 'utf8'));
+    const cached = JSON.parse(fs.readFileSync(cacheFile, 'utf8'));
+    if (cached && cached._v === CACHE_VERSION) return cached;
   }
 
   try {
@@ -88,7 +96,6 @@ async function fetchTmdb(movie) {
     let results = await searchTmdb(movie.cleanTitle, lang);
     let hit = bestMatch(results, movie.cleanTitle, movie.description);
 
-    // Fallback: try with article replaced by "The" if no exact title match
     const english = articleToEnglish(movie.cleanTitle);
     if (english !== movie.cleanTitle && (!hit || normalize(hit.title) !== normalize(movie.cleanTitle))) {
       const fallback = await searchTmdb(english, lang);
@@ -99,8 +106,13 @@ async function fetchTmdb(movie) {
     }
 
     const result = hit ? {
+      _v: CACHE_VERSION,
       poster: hit.poster_path ? TMDB_IMG + hit.poster_path : null,
       rating: hit.vote_average ? hit.vote_average.toFixed(1) : null,
+      voteCount: hit.vote_count || 0,
+      popularity: hit.popularity || 0,
+      year: hit.release_date ? hit.release_date.slice(0, 4) : null,
+      genres: (hit.genre_ids || []).map(id => genreMap[id]).filter(Boolean),
     } : null;
 
     fs.writeFileSync(cacheFile, JSON.stringify(result));
@@ -118,6 +130,7 @@ function sourceLabel(file) {
   if (file === 'arte_fr.json') return 'arte.fr';
   if (file === 'arte_de.json') return 'arte.de';
   if (file === '3sat.json')    return '3sat';
+  if (file === 'ard.json')     return 'ard';
   return file;
 }
 
@@ -126,11 +139,17 @@ function movieRecord(movie, tmdb) {
   return {
     title,
     searchTitle: title.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase(),
-    href: escapeHtml(movie.url_website),
+    href: escapeHtml(movie.url_video_hd || movie.url_video || movie.url_video_low || movie.url_website),
+    infoHref: escapeHtml(movie.url_website),
     channel: escapeHtml(movie.channel),
     source: sourceLabel(movie.source),
     poster: tmdb && tmdb.poster ? tmdb.poster : null,
     rating: tmdb && tmdb.rating && tmdb.rating !== '0.0' ? tmdb.rating : '0',
+    lowConfidence: !tmdb || (tmdb.voteCount < LOW_VOTE_THRESHOLD),
+    popularity: tmdb ? tmdb.popularity : 0,
+    year: tmdb && tmdb.year ? tmdb.year : null,
+    genres: tmdb && tmdb.genres ? tmdb.genres : [],
+    duration: movie.duration ? (() => { const h = Math.floor(movie.duration / 3600); const m = Math.floor((movie.duration % 3600) / 60); return `${h}:${String(m).padStart(2, '0')}`; })() : null,
   };
 }
 
@@ -139,27 +158,37 @@ async function main() {
     { file: 'arte_fr.json', lang: 'fr-FR' },
     { file: 'arte_de.json', lang: 'de-DE' },
     { file: '3sat.json',    lang: 'de-DE' },
+    { file: 'ard.json',     lang: 'de-DE' },
   ];
   const entries = sources.flatMap(({ file, lang }) =>
     JSON.parse(fs.readFileSync(file, 'utf8')).result.results.map(e => ({ ...e, lang, source: file }))
   );
 
+  // Filter out audio description versions
+  const filtered = entries.filter(e => !/audiodeskription/i.test(e.title));
+
   // Deduplicate by url_website (same stream = same movie)
   const seen = new Map();
-  for (const entry of entries) {
+  for (const entry of filtered) {
     const key = entry.url_website;
     if (!seen.has(key)) {
       seen.set(key, { ...entry, cleanTitle: cleanTitle(entry.title) });
     }
   }
-  const movies = [...seen.values()];
-  console.log(`Unique movies: ${movies.length}`);
+  let movies = [...seen.values()];
+  const isTest = process.argv.includes('--test');
+  if (isTest) movies = movies.slice(0, 10);
+  console.log(`Unique movies: ${movies.length}${isTest ? ' (test mode)' : ''}`);
+
+  // Fetch genre map in English for all sources
+  console.log('Fetching genre list...');
+  const genreMap = await fetchGenres('en-US');
 
   const records = [];
   for (let i = 0; i < movies.length; i++) {
     const movie = movies[i];
     process.stdout.write(`\rFetching TMDB [${i + 1}/${movies.length}] ${movie.cleanTitle.slice(0, 40).padEnd(40)}`);
-    const tmdb = await fetchTmdb(movie);
+    const tmdb = await fetchTmdb(movie, genreMap);
     records.push(movieRecord(movie, tmdb));
     await new Promise(r => setTimeout(r, 100));
   }
@@ -169,7 +198,6 @@ async function main() {
   fs.writeFileSync('content.js', `window.MOVIES = ${JSON.stringify(records, null, 2)};\n`, 'utf8');
   console.log('Written: content.js');
 
-  // Stamp cache-busting version in index.html
   const html = fs.readFileSync('index.html', 'utf8')
     .replace(/content\.js\?v=\d+/, `content.js?v=${version}`);
   fs.writeFileSync('index.html', html, 'utf8');

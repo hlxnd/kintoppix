@@ -75,6 +75,19 @@
 
     .dropdown-btn:hover { border-color: #555; }
 
+    #sortSelect {
+      background: #222;
+      border: 1px solid #333;
+      border-radius: 4px;
+      color: #e5e5e5;
+      font-size: 0.9rem;
+      padding: 7px 14px;
+      outline: none;
+      cursor: pointer;
+    }
+
+    #sortSelect:focus { border-color: #555; }
+
     .dropdown-menu {
       display: none;
       position: absolute;
@@ -180,19 +193,87 @@
       overflow: hidden;
       text-overflow: ellipsis;
     }
+
+    .year {
+      font-size: 0.68rem;
+      color: #555;
+      margin-left: auto;
+    }
+
+    .duration {
+      font-size: 0.68rem;
+      color: #555;
+    }
+
+    .rating.dim {
+      color: #7a6a18;
+      opacity: 0.5;
+    }
+
+    .genres {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      margin-top: 5px;
+    }
+
+    .card-poster {
+      position: relative;
+    }
+
+    .info-btn {
+      position: absolute;
+      top: 6px;
+      right: 6px;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: rgba(0,0,0,0.6);
+      border: 1px solid rgba(255,255,255,0.25);
+      color: #ccc;
+      font-size: 0.65rem;
+      font-style: italic;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-decoration: none;
+      opacity: 0;
+      transition: opacity 0.15s;
+    }
+
+    .card:hover .info-btn { opacity: 1; }
+    .info-btn:hover { background: rgba(0,0,0,0.85); color: #fff; }
+
+    .genre-tag {
+      font-size: 0.62rem;
+      color: #999;
+      background: #2a2a2a;
+      border-radius: 3px;
+      padding: 2px 5px;
+    }
   </style>
 </head>
 <body>
   <header>
     <h1>MWJW<span>Free Movies from Public Broadcasters</span></h1>
     <div class="controls">
+      <select id="sortSelect">
+        <option value="popularity">Sort: Popularity</option>
+        <option value="rating">Sort: Rating</option>
+      </select>
       <input id="search" type="search" placeholder="Search titles…" autocomplete="off">
+      <div class="dropdown" id="genreDropdown">
+        <div class="dropdown-btn" id="genreDropdownBtn">Genres ▾</div>
+        <div class="dropdown-menu" id="genreMenu"></div>
+      </div>
       <div class="dropdown" id="sourceDropdown">
         <div class="dropdown-btn" id="dropdownBtn">Sources ▾</div>
         <div class="dropdown-menu">
           <label><input type="checkbox" value="arte.fr" checked> arte.fr</label>
           <label><input type="checkbox" value="arte.de" checked> arte.de</label>
           <label><input type="checkbox" value="3sat" checked> 3sat</label>
+          <label><input type="checkbox" value="ard" checked> ard</label>
         </div>
       </div>
     </div>
@@ -201,13 +282,25 @@
     <div class="grid" id="grid"></div>
   </main>
 
-  <script src="content.js?v=1773496170273"></script>
+  <script src="content.js?v=1773500913550"></script>
   <script>
     const grid = document.getElementById('grid');
     const input = document.getElementById('search');
-    const dropdown = document.getElementById('sourceDropdown');
+    const sourceDropdown = document.getElementById('sourceDropdown');
     const dropdownBtn = document.getElementById('dropdownBtn');
-    const checkboxes = dropdown.querySelectorAll('input[type=checkbox]');
+    const sourceCheckboxes = sourceDropdown.querySelectorAll('input[type=checkbox]');
+    const genreDropdown = document.getElementById('genreDropdown');
+    const genreDropdownBtn = document.getElementById('genreDropdownBtn');
+    const genreMenu = document.getElementById('genreMenu');
+
+    // Build genre list from data
+    const allGenres = [...new Set(MOVIES.flatMap(m => m.genres || []))].sort();
+    allGenres.forEach(g => {
+      const label = document.createElement('label');
+      label.innerHTML = `<input type="checkbox" value="${g}" checked> ${g}`;
+      genreMenu.appendChild(label);
+    });
+    const genreCheckboxes = genreMenu.querySelectorAll('input[type=checkbox]');
 
     function buildCard(m) {
       const a = document.createElement('a');
@@ -218,43 +311,83 @@
       a.dataset.title = m.searchTitle;
       a.dataset.source = m.source;
       a.dataset.rating = m.rating;
+      a.dataset.popularity = m.popularity;
+      a.dataset.genres = (m.genres || []).join(',');
 
-      const poster = m.poster
+      const posterImg = m.poster
         ? `<img class="poster" src="${m.poster}" alt="${m.title}" loading="lazy">`
         : `<div class="poster-placeholder">${m.title}</div>`;
 
-      const rating = m.rating !== '0'
-        ? `<span class="rating">★ ${m.rating}</span>`
+      const infoBtn = m.infoHref
+        ? `<a class="info-btn" href="${m.infoHref}" target="_blank" rel="noopener" title="More info" onclick="event.stopPropagation()">i</a>`
         : '';
+
+      const poster = `<div class="card-poster">${posterImg}${infoBtn}</div>`;
+
+      const rating = m.rating !== '0'
+        ? `<span class="rating${m.lowConfidence ? ' dim' : ''}">★ ${m.rating}</span>`
+        : '';
+
+      const year = m.year ? `<span class="year">${m.year}</span>` : '';
+      const duration = m.duration ? `<span class="duration">${m.duration}</span>` : '';
+
+      const genreTags = (m.genres || []).map(g => `<span class="genre-tag">${g}</span>`).join('');
 
       a.innerHTML = `
         ${poster}
         <div class="card-info">
           <div class="card-title">${m.title}</div>
-          <div class="card-meta">${rating}<span class="channel">${m.channel}</span></div>
+          <div class="card-meta">${rating}${duration}<span class="channel">${m.channel}</span>${year}</div>
+          ${genreTags ? `<div class="genres">${genreTags}</div>` : ''}
         </div>`;
       return a;
     }
 
-    const sorted = [...MOVIES].sort((a, b) => parseFloat(b.rating) - parseFloat(a.rating));
-    const cards = sorted.map(buildCard);
+    const sortSelect = document.getElementById('sortSelect');
+
+    function getSortedCards() {
+      const key = sortSelect.value;
+      return [...MOVIES]
+        .sort((a, b) => parseFloat(b[key]) - parseFloat(a[key]))
+        .map(buildCard);
+    }
+
+    let cards = getSortedCards();
     cards.forEach(c => grid.appendChild(c));
+
+    function reSort() {
+      const key = sortSelect.value;
+      [...cards].sort((a, b) => parseFloat(b.dataset[key]) - parseFloat(a.dataset[key]))
+        .forEach(c => grid.appendChild(c));
+    }
+
+    sortSelect.addEventListener('change', reSort);
 
     function applyFilters() {
       const q = input.value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
-      const active = new Set([...checkboxes].filter(c => c.checked).map(c => c.value));
+      const activeSources = new Set([...sourceCheckboxes].filter(c => c.checked).map(c => c.value));
+      const activeGenres = new Set([...genreCheckboxes].filter(c => c.checked).map(c => c.value));
       cards.forEach(card => {
         const matchTitle = !q || card.dataset.title.includes(q);
-        const matchSource = active.has(card.dataset.source);
-        card.style.display = matchTitle && matchSource ? '' : 'none';
+        const matchSource = activeSources.has(card.dataset.source);
+        const cardGenres = card.dataset.genres ? card.dataset.genres.split(',') : [];
+        const matchGenre = cardGenres.length === 0 || cardGenres.some(g => activeGenres.has(g));
+        card.style.display = matchTitle && matchSource && matchGenre ? '' : 'none';
       });
     }
 
     input.addEventListener('input', applyFilters);
-    checkboxes.forEach(cb => cb.addEventListener('change', applyFilters));
+    sourceCheckboxes.forEach(cb => cb.addEventListener('change', applyFilters));
+    genreCheckboxes.forEach(cb => cb.addEventListener('change', applyFilters));
 
-    dropdownBtn.addEventListener('click', e => { e.stopPropagation(); dropdown.classList.toggle('open'); });
-    document.addEventListener('click', () => dropdown.classList.remove('open'));
+    dropdownBtn.addEventListener('click', e => { e.stopPropagation(); sourceDropdown.classList.toggle('open'); });
+    sourceDropdown.querySelector('.dropdown-menu').addEventListener('click', e => e.stopPropagation());
+    genreDropdownBtn.addEventListener('click', e => { e.stopPropagation(); genreDropdown.classList.toggle('open'); });
+    genreMenu.addEventListener('click', e => e.stopPropagation());
+    document.addEventListener('click', () => {
+      sourceDropdown.classList.remove('open');
+      genreDropdown.classList.remove('open');
+    });
   </script>
 </body>
 </html>
