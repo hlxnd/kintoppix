@@ -92,7 +92,7 @@ async function fetchTmdb(movie, genreMap) {
   const cacheFile = `${CACHE_DIR}/${movie.id.replace(/[^a-zA-Z0-9_-]/g, '_')}.json`;
   if (fs.existsSync(cacheFile)) {
     const cached = JSON.parse(fs.readFileSync(cacheFile, 'utf8'));
-    if (cached && cached._v === CACHE_VERSION) return cached;
+    if (cached && cached._v === CACHE_VERSION) return { data: cached, cached: true };
   }
 
   try {
@@ -120,9 +120,9 @@ async function fetchTmdb(movie, genreMap) {
     } : null;
 
     fs.writeFileSync(cacheFile, JSON.stringify(result));
-    return result;
+    return { data: result, cached: false };
   } catch {
-    return null;
+    return { data: null, cached: false };
   }
 }
 
@@ -206,14 +206,18 @@ async function main() {
   const genreMap = await fetchGenres('en-US');
 
   const records = [];
+  let cacheHits = 0, apiCalls = 0;
   for (let i = 0; i < movies.length; i++) {
     const movie = movies[i];
-    process.stdout.write(`\rFetching TMDB [${i + 1}/${movies.length}] ${movie.cleanTitle.slice(0, 40).padEnd(40)}`);
-    const tmdb = await fetchTmdb(movie, genreMap);
+    const label = `[${i + 1}/${movies.length}]`;
+    const { data: tmdb, cached } = await fetchTmdb(movie, genreMap);
+    const tag = cached ? 'cache' : 'api  ';
+    if (cached) cacheHits++; else apiCalls++;
+    process.stdout.write(`\r${label} ${tag} ${movie.cleanTitle.slice(0, 50).padEnd(50)}`);
     records.push(movieRecord(movie, tmdb));
-    await new Promise(r => setTimeout(r, 100));
+    if (!cached) await new Promise(r => setTimeout(r, 100));
   }
-  console.log('\nDone fetching.');
+  console.log(`\nDone fetching. cache=${cacheHits} api=${apiCalls}`);
 
   const version = Date.now();
   fs.writeFileSync('content.js', `window.MOVIES = ${JSON.stringify(records, null, 2)};\n`, 'utf8');
