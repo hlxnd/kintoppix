@@ -3,7 +3,7 @@ const https = require('https');
 
 const TMDB_KEY = process.env.TMDB_API_KEY;
 const TMDB_IMG = 'https://image.tmdb.org/t/p/w342';
-const CACHE_VERSION = 4;
+const CACHE_VERSION = 5;
 const LOW_VOTE_THRESHOLD = 50;
 
 const VERSION_DETECT = [
@@ -29,14 +29,7 @@ function cleanTitle(title) {
   if (guillemet) return guillemet[1].trim();
 
   return title
-    .replace(/\s*\(Audiodeskription\)/gi, '')
-    .replace(/\s*\(mit Untertitel\)/gi, '')
-    .replace(/\s*\(Originalversion mit Untertitel\)/gi, '')
-    .replace(/\s*\(Originalversion\)/gi, '')
-    .replace(/\s*\([^)]*[Uu]ntertitel[^)]*\)/g, '')
-    .replace(/\s*\(Gebärdensprache\)/gi, '')
-    .replace(/\s*\(Französisch\)/gi, '')
-    .replace(/\s*\(Englisch\)/gi, '')
+    .replace(/\s*\([^)]+\)/g, '')       // strip all parenthetical suffixes
     .replace(/\s*-\s*Spielfilm.*$/i, '')
     .trim();
 }
