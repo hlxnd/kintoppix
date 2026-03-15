@@ -6,6 +6,20 @@ const TMDB_IMG = 'https://image.tmdb.org/t/p/w342';
 const CACHE_VERSION = 4;
 const LOW_VOTE_THRESHOLD = 50;
 
+const VERSION_DETECT = [
+  { re: /\(Originalversion mit Untertitel\)/i, label: 'OmU' },
+  { re: /\(Audiodeskription\)/i, label: 'AD' },
+  { re: /\(mit Untertitel\)/i, label: 'UT' },
+  { re: /\(Originalversion\)/i, label: 'OV' },
+];
+
+function detectVersion(title) {
+  for (const { re, label } of VERSION_DETECT) {
+    if (re.test(title)) return label;
+  }
+  return null;
+}
+
 function cleanTitle(title) {
   // Extract title from «XXX» guillemet quotes if present
   const guillemet = title.match(/«([^»]+)»/);
@@ -158,6 +172,7 @@ function movieRecord(movie, tmdb) {
     genres: tmdb && tmdb.genres ? tmdb.genres : [],
     duration: movie.duration ? (() => { const h = Math.floor(movie.duration / 3600); const m = Math.floor((movie.duration % 3600) / 60); return `${h}:${String(m).padStart(2, '0')}`; })() : null,
     timestamp: movie.timestamp || null,
+    altVersions: movie.altVersions || [],
   };
 }
 
@@ -173,21 +188,40 @@ async function main() {
     JSON.parse(fs.readFileSync(file, 'utf8')).result.results.map(e => ({ ...e, lang, source: file }))
   );
 
-  // Filter out audio description versions and entries shorter than 30 min
+  // Filter out entries shorter than 30 min (keep all version variants)
   const filtered = entries.filter(e =>
-    !/audiodeskription/i.test(e.title) &&
     (!e.duration || e.duration >= 1800)
   );
 
-  // Deduplicate by url_website (same stream = same movie)
+  // Deduplicate by url_website + version (same stream+version = same entry)
   const seen = new Map();
   for (const entry of filtered) {
-    const key = entry.url_website;
+    const version = detectVersion(entry.title);
+    const key = `${entry.url_website}|||${version || ''}`;
     if (!seen.has(key)) {
       seen.set(key, { ...entry, cleanTitle: cleanTitle(entry.title) });
     }
   }
-  let movies = [...seen.values()];
+  // Group by channel + cleanTitle to merge version variants (AD, OmU, UT, OV)
+  const versionGroups = new Map();
+  for (const movie of seen.values()) {
+    const version = detectVersion(movie.title);
+    const key = `${movie.channel}|||${movie.cleanTitle}`;
+    if (!versionGroups.has(key)) versionGroups.set(key, []);
+    versionGroups.get(key).push({ ...movie, _version: version });
+  }
+
+  let movies = [];
+  for (const group of versionGroups.values()) {
+    const primary = group.find(m => !m._version) || group[0];
+    const alts = group.filter(m => m !== primary && m._version);
+    primary.altVersions = alts.map(m => ({
+      label: m._version,
+      href: m.url_video_hd || m.url_video || m.url_video_low || m.url_website,
+      hasDirectVideo: !!(m.url_video_hd || m.url_video || m.url_video_low),
+    }));
+    movies.push(primary);
+  }
   const isTest = process.argv.includes('--test');
   if (isTest) {
     const perSource = 3;

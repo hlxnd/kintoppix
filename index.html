@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script defer src="https://cloud.umami.is/script.js" data-website-id="f96685e1-3f63-495e-846b-1186d083b81b"></script>
   <title>Kintoppix – Free Movies</title>
   <link href="https://fonts.googleapis.com/css2?family=Monoton&display=swap" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/video.js/dist/video-js.min.css" rel="stylesheet">
@@ -348,6 +349,7 @@
       #detail-overview { font-size: 0.82rem; }
 
       #detail-poster { width: 90px; margin: 0 0 8px 10px; }
+      .watch-label { display: none; }
     }
 
     #detail-modal {
@@ -433,6 +435,7 @@
     }
 
     #detail-actions { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+    #detail-alts { display: flex; gap: 8px; }
 
     #detail-watch {
       background: #e5e5e5;
@@ -454,9 +457,44 @@
       color: #aaa;
       font-size: 0.8rem;
       text-decoration: none;
+      margin-left: auto;
     }
 
     #detail-info-link:hover { color: #fff; }
+
+    .alt-version-btn {
+      background: #2a2a2a;
+      color: #ccc;
+      border: 1px solid #444;
+      border-radius: 4px;
+      font-size: 0.95rem;
+      font-weight: 700;
+      padding: 9px 12px;
+      cursor: pointer;
+      letter-spacing: 0.5px;
+    }
+
+    .alt-version-btn:hover { background: #3a3a3a; color: #fff; }
+
+    .poster-versions {
+      position: absolute;
+      bottom: 4px;
+      right: 4px;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 2px;
+    }
+
+    .badge-version {
+      background: rgba(0,0,0,0.72);
+      color: #ccc;
+      font-size: 0.55rem;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      padding: 2px 4px;
+      border-radius: 2px;
+    }
 
     #detail-channel {
       font-size: 0.72rem;
@@ -548,6 +586,7 @@
         <p id="detail-overview"></p>
         <div id="detail-actions">
           <button id="detail-watch">▶ Watch</button>
+          <div id="detail-alts"></div>
           <a id="detail-info-link" href="#" target="_blank" rel="noopener"></a>
         </div>
         <div id="detail-channel"></div>
@@ -556,7 +595,7 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/video.js/dist/video.min.js"></script>
-  <script src="content.js?v=1773566157944"></script>
+  <script src="content.js?v=1773569517272"></script>
   <script>
     const grid = document.getElementById('grid');
     const input = document.getElementById('search');
@@ -626,6 +665,7 @@
     const detailOverview = document.getElementById('detail-overview');
     const detailChannel = document.getElementById('detail-channel');
     const detailWatch = document.getElementById('detail-watch');
+    const detailAlts = document.getElementById('detail-alts');
     const detailInfoLink = document.getElementById('detail-info-link');
 
     function openDetail(m) {
@@ -650,12 +690,27 @@
       detailChannel.textContent = decodeHtml(m.channel);
 
       const t = I18N[currentLang];
-      detailWatch.innerHTML = `▶ ${m.hasDirectVideo ? t.watch : t.open}`;
+      detailWatch.innerHTML = `▶ <span class="watch-label">${m.hasDirectVideo ? t.watch : t.open}</span>`;
       detailWatch.onclick = () => {
         closeDetail();
         if (m.hasDirectVideo) { openPlayer(m.href); }
         else { window.open(m.href, '_blank'); }
       };
+
+      detailAlts.innerHTML = '';
+      (m.altVersions || []).forEach(av => {
+        const vl = t.versionLabels[av.label] || { short: av.label, tip: av.label };
+        const btn = document.createElement('button');
+        btn.className = 'alt-version-btn';
+        btn.textContent = '▶ ' + vl.short;
+        btn.title = vl.tip;
+        btn.onclick = () => {
+          closeDetail();
+          if (av.hasDirectVideo) { openPlayer(av.href); }
+          else { window.open(av.href, '_blank'); }
+        };
+        detailAlts.appendChild(btn);
+      });
 
       if (m.infoHref) {
         detailInfoLink.href = m.infoHref;
@@ -693,7 +748,10 @@
 
       const isNew = m.timestamp && (Date.now() / 1000 - m.timestamp) < 7 * 86400;
       const newBadge = isNew ? `<span class="badge-new">New!</span>` : '';
-      const poster = `<div class="card-poster">${posterImg}${newBadge}</div>`;
+      const versionBadges = (m.altVersions || []).length
+        ? `<div class="poster-versions">${(m.altVersions || []).map(av => `<span class="badge-version" data-version-key="${av.label}">${av.label}</span>`).join('')}</div>`
+        : '';
+      const poster = `<div class="card-poster">${posterImg}${newBadge}${versionBadges}</div>`;
 
       const rating = m.rating !== '0'
         ? `<span class="rating${m.lowConfidence ? ' dim' : ''}">★ ${m.rating}</span>`
@@ -785,7 +843,7 @@
 
     const I18N = {
       de: {
-        subtitle: 'Kostenlose Filme aus öffentlich-rechtlichen Mediatheken',
+        subtitle: 'Kostenloses Streaming der öffentlich-rechtlichen Mediatheken',
         sortPopularity: 'Sortierung: Beliebtheit',
         sortRating: 'Sortierung: Bewertung',
         sortDate: 'Sortierung: Datum',
@@ -796,10 +854,11 @@
         watch: 'Ansehen',
         open: 'Öffnen',
         moreInfo: 'Mehr Infos →',
-        genreMap: { 'Action':'Action','Adventure':'Abenteuer','Animation':'Animation','Comedy':'Komödie','Crime':'Krimi','Documentary':'Dokumentarfilm','Drama':'Drama','Family':'Familie','Fantasy':'Fantasy','History':'Geschichte','Horror':'Horror','Music':'Musik','Mystery':'Mystery','Romance':'Romantik','Science Fiction':'Science-Fiction','TV Movie':'TV-Film','Thriller':'Thriller','War':'Kriegsfilm','Western':'Western' }
+        genreMap: { 'Action':'Action','Adventure':'Abenteuer','Animation':'Animation','Comedy':'Komödie','Crime':'Krimi','Documentary':'Dokumentarfilm','Drama':'Drama','Family':'Familie','Fantasy':'Fantasy','History':'Geschichte','Horror':'Horror','Music':'Musik','Mystery':'Mystery','Romance':'Romantik','Science Fiction':'Science-Fiction','TV Movie':'TV-Film','Thriller':'Thriller','War':'Kriegsfilm','Western':'Western' },
+        versionLabels: { AD:{short:'AD',tip:'Audiodeskription'}, OmU:{short:'OmU',tip:'Originalversion mit Untertiteln'}, UT:{short:'UT',tip:'Untertitel'}, OV:{short:'OV',tip:'Originalversion'} }
       },
       fr: {
-        subtitle: 'Films gratuits des chaînes publiques européennes',
+        subtitle: 'Streaming gratuit des chaînes publiques',
         sortPopularity: 'Tri : Popularité',
         sortRating: 'Tri : Note',
         sortDate: 'Tri : Date',
@@ -810,10 +869,11 @@
         watch: 'Regarder',
         open: 'Ouvrir',
         moreInfo: 'Plus d\'infos →',
-        genreMap: { 'Action':'Action','Adventure':'Aventure','Animation':'Animation','Comedy':'Comédie','Crime':'Policier','Documentary':'Documentaire','Drama':'Drame','Family':'Famille','Fantasy':'Fantastique','History':'Histoire','Horror':'Horreur','Music':'Musique','Mystery':'Mystère','Romance':'Romance','Science Fiction':'Science-fiction','TV Movie':'Téléfilm','Thriller':'Thriller','War':'Guerre','Western':'Western' }
+        genreMap: { 'Action':'Action','Adventure':'Aventure','Animation':'Animation','Comedy':'Comédie','Crime':'Policier','Documentary':'Documentaire','Drama':'Drame','Family':'Famille','Fantasy':'Fantastique','History':'Histoire','Horror':'Horreur','Music':'Musique','Mystery':'Mystère','Romance':'Romance','Science Fiction':'Science-fiction','TV Movie':'Téléfilm','Thriller':'Thriller','War':'Guerre','Western':'Western' },
+        versionLabels: { AD:{short:'AD',tip:'Audiodescription'}, OmU:{short:'VOST',tip:'Version originale sous-titrée'}, UT:{short:'ST',tip:'Sous-titres'}, OV:{short:'VO',tip:'Version originale'} }
       },
       en: {
-        subtitle: 'Free Movies from Public Broadcasters',
+        subtitle: 'Free streaming from Public Broadcasters',
         sortPopularity: 'Sort: Popularity',
         sortRating: 'Sort: Rating',
         sortDate: 'Sort: Date',
@@ -824,7 +884,8 @@
         watch: 'Watch',
         open: 'Open',
         moreInfo: 'More info →',
-        genreMap: {}
+        genreMap: {},
+        versionLabels: { AD:{short:'AD',tip:'Audio Description'}, OmU:{short:'OST',tip:'Original with subtitles'}, UT:{short:'Subs',tip:'Subtitles'}, OV:{short:'OV',tip:'Original version'} }
       }
     };
 
@@ -843,6 +904,10 @@
       document.getElementById('sourceAllText').textContent = t.all;
       document.querySelectorAll('[data-genre-en]').forEach(el => {
         el.textContent = t.genreMap[el.dataset.genreEn] || el.dataset.genreEn;
+      });
+      document.querySelectorAll('[data-version-key]').forEach(el => {
+        const vl = t.versionLabels[el.dataset.versionKey];
+        if (vl) el.textContent = vl.short;
       });
       langDropdownBtn.textContent = lang.toUpperCase() + ' ▾';
       langDropdown.querySelectorAll('[data-lang]').forEach(el => {
