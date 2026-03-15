@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Mentions légales / Impressum — Kintoppix</title>
+  <link href="https://fonts.googleapis.com/css2?family=Monoton&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: #0f0f0f; color: #ccc; font-family: 'Helvetica Neue', Arial, sans-serif; font-size: 0.9rem; line-height: 1.7; }
+    header {
+      background: #0f0f0f;
+      padding: 18px 32px;
+      border-bottom: 1px solid #222;
+      display: flex;
+      align-items: center;
+    }
+    header h1 {
+      font-family: 'Monoton', cursive;
+      font-size: 1.6rem;
+      font-weight: 400;
+      letter-spacing: 4px;
+      color: #c0392b;
+      text-decoration: none;
+    }
+    header a { text-decoration: none; }
+    header span { font-family: 'Helvetica Neue', Arial, sans-serif; font-size: 0.85rem; font-weight: 400; color: #888; margin-left: 12px; }
+    main { max-width: 680px; margin: 0 auto; padding: 40px 24px 64px; }
+    h2 { color: #e5e5e5; font-size: 1rem; margin: 28px 0 8px; }
+    p { margin-bottom: 12px; }
+    a { color: #888; }
+    a:hover { color: #ccc; }
+    hr { border: none; border-top: 1px solid #222; margin: 32px 0; }
+  </style>
+</head>
+<body>
+  <header>
+    <a href="/"><h1>Kintoppix<span id="subtitle">Free Movies from Public Broadcasters</span></h1></a>
+  </header>
+  <main>
+  <h2 style="font-size:1.3rem; color:#e5e5e5; margin: 0 0 24px;">Mentions légales / Impressum</h2>
+
+  <h2>Éditeur / Herausgeber</h2>
+  <p>
+    Alexander Hildenbrand<br>
+    82 imp. du Cerf<br>
+    01280 Prévessin-Moëns<br>
+    France<br>
+    Contact : <a href="mailto:contact@kintoppix.eu">contact@kintoppix.eu</a>
+  </p>
+
+  <h2>Hébergeur / Hosting</h2>
+  <p>
+    GitHub Pages<br>
+    GitHub, Inc. — 88 Colin P. Kelly Jr. Street, San Francisco, CA 94107, USA<br>
+    <a href="https://pages.github.com" target="_blank" rel="noopener">pages.github.com</a>
+  </p>
+
+  <hr>
+
+  <h2>Nature du site</h2>
+  <p>Site personnel, non commercial. Kintoppix est un outil de navigation permettant d'accéder à des films disponibles gratuitement sur les médiathèques de chaînes publiques européennes. Le site ne stocke, n'héberge ni ne redistribue aucun contenu vidéo.</p>
+
+  <h2>Attributions</h2>
+  <p>Métadonnées et visuels fournis par <a href="https://www.themoviedb.org" target="_blank" rel="noopener">The Movie Database (TMDb)</a>. Ce produit utilise l'API TMDb mais n'est ni approuvé ni certifié par TMDb.</p>
+  <p>Données de programmes issues de <a href="https://mediathekviewweb.de" target="_blank" rel="noopener">MediathekViewWeb</a>.</p>
+
+  <hr>
+
+  <h2>Haftungsausschluss (Deutschland)</h2>
+  <p>Diese Website ist ein privates, nicht-kommerzielles Projekt. Es werden keine Videoinhalte gespeichert oder weitergeleitet. Alle verlinkten Inhalte liegen in der Verantwortung der jeweiligen öffentlich-rechtlichen Sender.</p>
+  </main>
+  <script>
+    const subtitles = {
+      de: 'Kostenlose Filme aus öffentlich-rechtlichen Mediatheken',
+      fr: 'Films gratuits des chaînes publiques européennes',
+      en: 'Free Movies from Public Broadcasters'
+    };
+    const lang = localStorage.getItem('kintoppix-lang') || 'de';
+    document.getElementById('subtitle').textContent = subtitles[lang] || subtitles.de;
+  </script>
+</body>
+</html>

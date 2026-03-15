@@ -226,29 +226,6 @@
       position: relative;
     }
 
-    .info-btn {
-      position: absolute;
-      top: 6px;
-      right: 6px;
-      width: 20px;
-      height: 20px;
-      border-radius: 50%;
-      background: rgba(0,0,0,0.6);
-      border: 1px solid rgba(255,255,255,0.25);
-      color: #ccc;
-      font-size: 0.65rem;
-      font-style: italic;
-      font-weight: 700;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      text-decoration: none;
-      opacity: 0;
-      transition: opacity 0.15s;
-    }
-
-    .card:hover .info-btn { opacity: 1; }
-    .info-btn:hover { background: rgba(0,0,0,0.85); color: #fff; }
 
     #player-modal {
       display: none;
@@ -344,15 +321,8 @@
       .card-meta { gap: 4px; }
       .genres { display: none; }
 
-      #detail-modal { padding: 0; align-items: flex-end; }
-
       #detail-wrap {
-        grid-template-columns: 1fr 90px;
-        grid-template-areas:
-          "header  poster"
-          "actions actions"
-          "overview overview"
-          "channel channel";
+        flex-direction: column;
         max-width: 100%;
         max-height: 92vh;
         border-radius: 12px 12px 0 0;
@@ -360,17 +330,14 @@
         overflow-y: auto;
       }
 
-      #detail-header { padding: 18px 14px 8px; }
-      #detail-header h2 { font-size: 1.1rem; margin-bottom: 6px; }
+      #detail-poster { width: 100%; height: 200px; flex-shrink: 0; order: -1; }
+      #detail-poster img { aspect-ratio: unset; }
 
-      #detail-poster { height: auto; }
-      #detail-poster img { aspect-ratio: 2/3; object-fit: cover; }
-
-      #detail-actions { padding: 0 14px 12px; }
+      #detail-body { padding: 18px 14px 14px; }
+      #detail-body h2 { font-size: 1.1rem; margin-bottom: 6px; }
+      #detail-actions { margin-bottom: 12px; }
       #detail-watch { flex: 1; justify-content: center; padding: 10px; }
-
-      #detail-overview { padding: 0 14px 12px; font-size: 0.82rem; }
-      #detail-channel { padding: 0 14px 16px; }
+      #detail-overview { font-size: 0.82rem; }
     }
 
     #detail-modal {
@@ -396,13 +363,8 @@
       max-width: 780px;
       max-height: 90vh;
       overflow-y: auto;
-      display: grid;
-      grid-template-columns: 1fr 200px;
-      grid-template-areas:
-        "header  poster"
-        "actions poster"
-        "overview poster"
-        "channel poster";
+      display: flex;
+      flex-direction: row;
     }
 
     #detail-close {
@@ -425,12 +387,15 @@
 
     #detail-close:hover { background: rgba(0,0,0,0.9); }
 
-    #detail-header {
-      grid-area: header;
-      padding: 28px 24px 12px;
+    #detail-body {
+      flex: 1;
+      padding: 28px 24px;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
     }
 
-    #detail-header h2 {
+    #detail-body h2 {
       font-size: 1.4rem;
       font-weight: 700;
       color: #fff;
@@ -439,11 +404,11 @@
     }
 
     #detail-meta {
-      grid-area: meta;
       display: flex;
       flex-wrap: wrap;
       align-items: center;
       gap: 8px;
+      margin-bottom: 16px;
       font-size: 0.8rem;
       color: #aaa;
     }
@@ -452,11 +417,10 @@
     #detail-meta .d-sep { color: #444; }
 
     #detail-actions {
-      grid-area: actions;
       display: flex;
       align-items: center;
       gap: 12px;
-      padding: 0 24px 16px;
+      margin-bottom: 16px;
     }
 
     #detail-watch {
@@ -485,22 +449,21 @@
     #detail-info-link:hover { color: #fff; }
 
     #detail-overview {
-      grid-area: overview;
       font-size: 0.85rem;
       line-height: 1.65;
       color: #ccc;
-      padding: 0 24px 16px;
+      margin-bottom: 16px;
+      flex: 1;
     }
 
     #detail-channel {
-      grid-area: channel;
       font-size: 0.72rem;
       color: #555;
-      padding: 0 24px 24px;
     }
 
     #detail-poster {
-      grid-area: poster;
+      width: 200px;
+      flex-shrink: 0;
       background: #111;
     }
 
@@ -552,6 +515,7 @@
   <footer>
     Video data provided by <a href="https://mediathekviewweb.de" target="_blank" rel="noopener">MediathekViewWeb</a>.
     Movie metadata and artwork from <a href="https://www.themoviedb.org" target="_blank" rel="noopener">TMDb</a> — this product uses the TMDb API but is not endorsed or certified by TMDb.
+    · <a href="/info.html">Mentions légales / Impressum</a>
   </footer>
 
   <div id="player-modal">
@@ -564,19 +528,19 @@
   <div id="detail-modal">
     <div id="detail-wrap">
       <button id="detail-close">✕</button>
-      <div id="detail-header">
+      <div id="detail-body">
         <h2 id="detail-title"></h2>
         <div id="detail-meta"></div>
+        <div id="detail-actions">
+          <button id="detail-watch">▶ Watch</button>
+          <a id="detail-info-link" href="#" target="_blank" rel="noopener"></a>
+        </div>
+        <p id="detail-overview"></p>
+        <div id="detail-channel"></div>
       </div>
       <div id="detail-poster">
         <img id="detail-img" src="" alt="">
       </div>
-      <div id="detail-actions">
-        <button id="detail-watch">▶ Watch</button>
-        <a id="detail-info-link" href="#" target="_blank" rel="noopener"></a>
-      </div>
-      <p id="detail-overview"></p>
-      <div id="detail-channel"></div>
     </div>
   </div>
 
@@ -712,11 +676,7 @@
         ? `<img class="poster" src="${m.poster}" alt="${m.title}" loading="lazy">`
         : `<div class="poster-placeholder">${m.title}</div>`;
 
-      const infoBtn = m.infoHref
-        ? `<a class="info-btn" href="${m.infoHref}" target="_blank" rel="noopener" title="More info" onclick="event.stopPropagation()">i</a>`
-        : '';
-
-      const poster = `<div class="card-poster">${posterImg}${infoBtn}</div>`;
+      const poster = `<div class="card-poster">${posterImg}</div>`;
 
       const rating = m.rating !== '0'
         ? `<span class="rating${m.lowConfidence ? ' dim' : ''}">★ ${m.rating}</span>`
@@ -735,7 +695,6 @@
           ${genreTags ? `<div class="genres">${genreTags}</div>` : ''}
         </div>`;
       a.addEventListener('click', e => {
-        if (e.target.closest('.info-btn')) return;
         e.preventDefault();
         openDetail(m);
       });
@@ -851,6 +810,7 @@
 
     function setLang(lang) {
       currentLang = lang;
+      localStorage.setItem('kintoppix-lang', lang);
       const t = I18N[lang];
       document.querySelector('header h1 span').textContent = t.subtitle;
       sortSelect.options[0].textContent = t.sortPopularity;
@@ -876,7 +836,7 @@
       el.addEventListener('click', () => setLang(el.dataset.lang));
     });
 
-    setLang('de');
+    setLang(localStorage.getItem('kintoppix-lang') || 'de');
   </script>
 </body>
 </html>
