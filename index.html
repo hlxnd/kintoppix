@@ -450,7 +450,15 @@
     }
 
     @media (min-width: 641px) {
-      #detail-poster { width: 160px; margin: 0 0 12px 20px; }
+      #detail-wrap { padding-right: 228px; }
+      #detail-poster {
+        position: absolute;
+        top: 0; right: 0; bottom: 0;
+        width: 200px;
+        float: none;
+        margin: 0;
+      }
+      #detail-poster img { width: auto; height: 100%; object-fit: fill; }
     }
 
     #detail-poster {
@@ -458,11 +466,8 @@
       background: #111;
     }
 
-    #detail-poster img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      display: block;
+    @media (max-width: 640px) {
+      #detail-poster img { width: 100%; height: auto; display: block; }
     }
   </style>
 </head>
