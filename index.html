@@ -591,6 +591,9 @@
       player.play();
     }
 
+    const _decodeEl = document.createElement('textarea');
+    function decodeHtml(str) { _decodeEl.innerHTML = str; return _decodeEl.value; }
+
     function closePlayer() {
       player.pause();
       player.src('');
@@ -614,7 +617,7 @@
       if (m.poster) { detailImg.src = m.poster; detailImg.style.display = 'block'; }
       else { detailImg.style.display = 'none'; }
 
-      detailTitle.textContent = m.title;
+      detailTitle.textContent = decodeHtml(m.title);
 
       const parts = [];
       if (m.year) parts.push(`<span>${m.year}</span>`);
@@ -628,8 +631,8 @@
       }
       detailMeta.innerHTML = parts.join('<span class="d-sep"> · </span>');
 
-      detailOverview.textContent = m.overview || '';
-      detailChannel.textContent = m.channel;
+      detailOverview.textContent = decodeHtml(m.overview || '');
+      detailChannel.textContent = decodeHtml(m.channel);
 
       const t = I18N[currentLang];
       detailWatch.innerHTML = `▶ ${m.hasDirectVideo ? t.watch : t.open}`;
