@@ -22,7 +22,7 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
 
       - name: Restore TMDB cache
         uses: actions/cache/restore@v4
@@ -45,10 +45,15 @@ jobs:
           path: cache/
           key: tmdb-cache-${{ github.run_id }}
 
+      - name: Assemble site
+        run: |
+          mkdir -p _site
+          cp index.html info.html robots.txt .nojekyll content.js _site/
+
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: .
+          path: _site
 
       - name: Deploy to GitHub Pages
         id: deployment
