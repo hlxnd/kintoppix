@@ -450,7 +450,7 @@ footer a:hover { color: #888; }
     float: none;
     margin: 0;
   }
-  #detail-poster img { width: auto; height: 100%; object-fit: fill; }
+  #detail-poster img { width: 100%; height: 100%; object-fit: cover; }
 }
 
 @media (max-width: 640px) {
