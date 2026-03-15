@@ -61,3 +61,17 @@ curl 'https://mediathekviewweb.de/api/query' -H 'content-type: application/json'
 }' > srf.json
 
 node clean-srf.js
+
+curl 'https://mediathekviewweb.de/api/query' -H 'content-type: application/json' --data '{
+  "queries": [
+    {"fields": ["topic"], "query": "Filme"},
+    {"fields": ["channel"], "query": "ZDF"}
+  ],
+  "sortBy": "timestamp",
+  "sortOrder": "desc",
+  "future": false,
+  "offset": 0,
+  "size": 1000
+}' > zdf.json
+
+node clean-zdf.js

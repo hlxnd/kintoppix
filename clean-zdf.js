@@ -1,11 +1,11 @@
 const fs = require('fs');
 
-const file = 'srf.json';
+const file = 'zdf.json';
 const data = JSON.parse(fs.readFileSync(file, 'utf8'));
 const before = data.result.results.length;
 
 data.result.results = data.result.results.filter(e =>
-  (e.topic === 'Film' || e.topic === 'Schweizer Film') &&
+  e.topic === 'Filme' &&
   (!e.duration || e.duration >= 1800)
 );
 

@@ -150,6 +150,7 @@ function sourceLabel(file) {
   if (file === '3sat.json')    return '3sat';
   if (file === 'ard.json')     return 'ard';
   if (file === 'srf.json')     return 'srf';
+  if (file === 'zdf.json')     return 'zdf';
   return file;
 }
 
@@ -183,6 +184,7 @@ async function main() {
     { file: '3sat.json',    lang: 'de-DE' },
     { file: 'ard.json',     lang: 'de-DE' },
     { file: 'srf.json',     lang: 'de-DE' },
+    { file: 'zdf.json',     lang: 'de-DE' },
   ];
   const entries = sources.flatMap(({ file, lang }) =>
     JSON.parse(fs.readFileSync(file, 'utf8')).result.results.map(e => ({ ...e, lang, source: file }))
