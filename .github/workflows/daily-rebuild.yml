@@ -51,7 +51,7 @@ jobs:
       - name: Assemble site
         run: |
           mkdir -p _site
-          cp index.html info.html robots.txt .nojekyll content.js _site/
+          cp index.html info.html style.css app.js robots.txt .nojekyll content.js _site/
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
