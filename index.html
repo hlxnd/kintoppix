@@ -226,6 +226,20 @@
       position: relative;
     }
 
+    .badge-new {
+      position: absolute;
+      top: 6px;
+      left: 6px;
+      background: #c0392b;
+      color: #fff;
+      font-size: 0.6rem;
+      font-weight: 700;
+      letter-spacing: 1px;
+      padding: 2px 5px;
+      border-radius: 3px;
+      text-transform: uppercase;
+    }
+
 
     #player-modal {
       display: none;
@@ -479,6 +493,7 @@
       <select id="sortSelect">
         <option value="popularity">Sort: Popularity</option>
         <option value="rating">Sort: Rating</option>
+        <option value="timestamp">Sort: Date</option>
       </select>
       <div class="dropdown" id="genreDropdown">
         <div class="dropdown-btn" id="genreDropdownBtn">Genres ▾</div>
@@ -541,7 +556,7 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/video.js/dist/video.min.js"></script>
-  <script src="content.js?v=1773522432733"></script>
+  <script src="content.js?v=1773566157944"></script>
   <script>
     const grid = document.getElementById('grid');
     const input = document.getElementById('search');
@@ -669,13 +684,16 @@
       a.dataset.source = m.source;
       a.dataset.rating = m.rating;
       a.dataset.popularity = m.popularity;
+      a.dataset.timestamp = m.timestamp || 0;
       a.dataset.genres = (m.genres || []).join(',');
 
       const posterImg = m.poster
         ? `<img class="poster" src="${m.poster}" alt="${m.title}" loading="lazy">`
         : `<div class="poster-placeholder">${m.title}</div>`;
 
-      const poster = `<div class="card-poster">${posterImg}</div>`;
+      const isNew = m.timestamp && (Date.now() / 1000 - m.timestamp) < 7 * 86400;
+      const newBadge = isNew ? `<span class="badge-new">New!</span>` : '';
+      const poster = `<div class="card-poster">${posterImg}${newBadge}</div>`;
 
       const rating = m.rating !== '0'
         ? `<span class="rating${m.lowConfidence ? ' dim' : ''}">★ ${m.rating}</span>`
@@ -770,6 +788,7 @@
         subtitle: 'Kostenlose Filme aus öffentlich-rechtlichen Mediatheken',
         sortPopularity: 'Sortierung: Beliebtheit',
         sortRating: 'Sortierung: Bewertung',
+        sortDate: 'Sortierung: Datum',
         searchPlaceholder: 'Titel suchen…',
         genres: 'Genres ▾',
         sources: 'Sender ▾',
@@ -783,6 +802,7 @@
         subtitle: 'Films gratuits des chaînes publiques européennes',
         sortPopularity: 'Tri : Popularité',
         sortRating: 'Tri : Note',
+        sortDate: 'Tri : Date',
         searchPlaceholder: 'Rechercher des titres…',
         genres: 'Genres ▾',
         sources: 'Chaînes ▾',
@@ -796,6 +816,7 @@
         subtitle: 'Free Movies from Public Broadcasters',
         sortPopularity: 'Sort: Popularity',
         sortRating: 'Sort: Rating',
+        sortDate: 'Sort: Date',
         searchPlaceholder: 'Search titles…',
         genres: 'Genres ▾',
         sources: 'Sources ▾',
@@ -814,6 +835,7 @@
       document.querySelector('header h1 span').textContent = t.subtitle;
       sortSelect.options[0].textContent = t.sortPopularity;
       sortSelect.options[1].textContent = t.sortRating;
+      sortSelect.options[2].textContent = t.sortDate;
       input.placeholder = t.searchPlaceholder;
       genreDropdownBtn.textContent = t.genres;
       dropdownBtn.textContent = t.sources;

@@ -157,6 +157,7 @@ function movieRecord(movie, tmdb) {
     year: tmdb && tmdb.year ? tmdb.year : null,
     genres: tmdb && tmdb.genres ? tmdb.genres : [],
     duration: movie.duration ? (() => { const h = Math.floor(movie.duration / 3600); const m = Math.floor((movie.duration % 3600) / 60); return `${h}:${String(m).padStart(2, '0')}`; })() : null,
+    timestamp: movie.timestamp || null,
   };
 }
 
