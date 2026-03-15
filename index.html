@@ -308,23 +308,29 @@
         flex-wrap: wrap;
         padding: 10px 14px;
         gap: 8px;
+        overflow: visible;
       }
 
       header h1 { font-size: 1.1rem; letter-spacing: 2px; }
-      header span { display: none; }
+      header h1 span { display: none; }
 
       .controls {
         margin-left: 0;
         width: 100%;
         flex-wrap: wrap;
-        gap: 8px;
+        gap: 6px;
       }
 
+      /* Row 1: search full width */
+      #search { width: 100%; flex: none; font-size: 0.85rem; padding: 7px 10px; }
+
+      /* Row 2: sort + dropdowns */
       #sortSelect { flex: 1; min-width: 0; font-size: 0.8rem; padding: 6px 8px; }
 
-      #search { flex: 2; min-width: 0; width: auto; font-size: 0.8rem; padding: 6px 10px; }
-
       .dropdown-btn { font-size: 0.8rem; padding: 6px 10px; }
+
+      /* Dropdown menus: scroll if too tall, open above on mobile to avoid clipping */
+      .dropdown-menu { max-height: 50vh; overflow-y: auto; }
 
       main { padding: 10px; }
 
@@ -341,26 +347,30 @@
       #detail-modal { padding: 0; align-items: flex-end; }
 
       #detail-wrap {
-        flex-direction: column-reverse;
+        grid-template-columns: 1fr 90px;
+        grid-template-areas:
+          "header  poster"
+          "actions actions"
+          "overview overview"
+          "channel channel";
         max-width: 100%;
         max-height: 92vh;
         border-radius: 12px 12px 0 0;
         border-bottom: none;
+        overflow-y: auto;
       }
 
-      #detail-poster {
-        width: 100%;
-        height: 220px;
-        flex-shrink: 0;
-      }
+      #detail-header { padding: 18px 14px 8px; }
+      #detail-header h2 { font-size: 1.1rem; margin-bottom: 6px; }
 
-      #detail-body {
-        padding: 20px 18px 18px;
-      }
+      #detail-poster { height: auto; }
+      #detail-poster img { aspect-ratio: 2/3; object-fit: cover; }
 
-      #detail-body h2 { font-size: 1.2rem; margin-bottom: 8px; }
+      #detail-actions { padding: 0 14px 12px; }
+      #detail-watch { flex: 1; justify-content: center; padding: 10px; }
 
-      #detail-overview { font-size: 0.82rem; }
+      #detail-overview { padding: 0 14px 12px; font-size: 0.82rem; }
+      #detail-channel { padding: 0 14px 16px; }
     }
 
     #detail-modal {
@@ -386,8 +396,13 @@
       max-width: 780px;
       max-height: 90vh;
       overflow-y: auto;
-      display: flex;
-      flex-direction: row;
+      display: grid;
+      grid-template-columns: 1fr 200px;
+      grid-template-areas:
+        "header  poster"
+        "actions poster"
+        "overview poster"
+        "channel poster";
     }
 
     #detail-close {
@@ -410,16 +425,13 @@
 
     #detail-close:hover { background: rgba(0,0,0,0.9); }
 
-    #detail-body {
-      flex: 1;
-      padding: 32px 28px 28px;
-      display: flex;
-      flex-direction: column;
-      min-width: 0;
+    #detail-header {
+      grid-area: header;
+      padding: 28px 24px 12px;
     }
 
-    #detail-body h2 {
-      font-size: 1.5rem;
+    #detail-header h2 {
+      font-size: 1.4rem;
       font-weight: 700;
       color: #fff;
       margin-bottom: 10px;
@@ -427,11 +439,11 @@
     }
 
     #detail-meta {
+      grid-area: meta;
       display: flex;
       flex-wrap: wrap;
       align-items: center;
       gap: 8px;
-      margin-bottom: 16px;
       font-size: 0.8rem;
       color: #aaa;
     }
@@ -439,15 +451,13 @@
     #detail-meta .d-rating { color: #f5c518; font-weight: 700; }
     #detail-meta .d-sep { color: #444; }
 
-    #detail-overview {
-      font-size: 0.85rem;
-      line-height: 1.65;
-      color: #ccc;
-      margin-bottom: 20px;
-      flex: 1;
+    #detail-actions {
+      grid-area: actions;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 0 24px 16px;
     }
-
-    #detail-actions { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
 
     #detail-watch {
       background: #e5e5e5;
@@ -469,18 +479,28 @@
       color: #aaa;
       font-size: 0.8rem;
       text-decoration: none;
+      margin-left: auto;
     }
 
     #detail-info-link:hover { color: #fff; }
 
+    #detail-overview {
+      grid-area: overview;
+      font-size: 0.85rem;
+      line-height: 1.65;
+      color: #ccc;
+      padding: 0 24px 16px;
+    }
+
     #detail-channel {
+      grid-area: channel;
       font-size: 0.72rem;
       color: #555;
+      padding: 0 24px 24px;
     }
 
     #detail-poster {
-      width: 200px;
-      flex-shrink: 0;
+      grid-area: poster;
       background: #111;
     }
 
@@ -496,11 +516,11 @@
   <header>
     <h1>Kintoppix<span>Free Movies from Public Broadcasters</span></h1>
     <div class="controls">
+      <input id="search" type="search" placeholder="Search titles…" autocomplete="off">
       <select id="sortSelect">
         <option value="popularity">Sort: Popularity</option>
         <option value="rating">Sort: Rating</option>
       </select>
-      <input id="search" type="search" placeholder="Search titles…" autocomplete="off">
       <div class="dropdown" id="genreDropdown">
         <div class="dropdown-btn" id="genreDropdownBtn">Genres ▾</div>
         <div class="dropdown-menu" id="genreMenu"></div>
@@ -544,19 +564,19 @@
   <div id="detail-modal">
     <div id="detail-wrap">
       <button id="detail-close">✕</button>
-      <div id="detail-body">
+      <div id="detail-header">
         <h2 id="detail-title"></h2>
         <div id="detail-meta"></div>
-        <p id="detail-overview"></p>
-        <div id="detail-actions">
-          <button id="detail-watch">▶ Watch</button>
-          <a id="detail-info-link" href="#" target="_blank" rel="noopener"></a>
-        </div>
-        <div id="detail-channel"></div>
       </div>
       <div id="detail-poster">
         <img id="detail-img" src="" alt="">
       </div>
+      <div id="detail-actions">
+        <button id="detail-watch">▶ Watch</button>
+        <a id="detail-info-link" href="#" target="_blank" rel="noopener"></a>
+      </div>
+      <p id="detail-overview"></p>
+      <div id="detail-channel"></div>
     </div>
   </div>
 
@@ -771,14 +791,19 @@
     }));
     genreCheckboxes.forEach(cb => cb.addEventListener('change', applyFilters));
 
-    dropdownBtn.addEventListener('click', e => { e.stopPropagation(); sourceDropdown.classList.toggle('open'); });
+    const langDropdown = document.getElementById('langDropdown');
+    const langDropdownBtn = document.getElementById('langDropdownBtn');
+    const allDropdowns = [sourceDropdown, genreDropdown, langDropdown];
+
+    function openDropdown(dd) {
+      allDropdowns.forEach(d => d.classList.toggle('open', d === dd ? !dd.classList.contains('open') : false));
+    }
+
+    dropdownBtn.addEventListener('click', e => { e.stopPropagation(); openDropdown(sourceDropdown); });
     sourceDropdown.querySelector('.dropdown-menu').addEventListener('click', e => e.stopPropagation());
-    genreDropdownBtn.addEventListener('click', e => { e.stopPropagation(); genreDropdown.classList.toggle('open'); });
+    genreDropdownBtn.addEventListener('click', e => { e.stopPropagation(); openDropdown(genreDropdown); });
     genreMenu.addEventListener('click', e => e.stopPropagation());
-    document.addEventListener('click', () => {
-      sourceDropdown.classList.remove('open');
-      genreDropdown.classList.remove('open');
-    });
+    document.addEventListener('click', () => allDropdowns.forEach(d => d.classList.remove('open')));
 
     let currentLang = 'de';
 
@@ -824,9 +849,6 @@
       }
     };
 
-    const langDropdown = document.getElementById('langDropdown');
-    const langDropdownBtn = document.getElementById('langDropdownBtn');
-
     function setLang(lang) {
       currentLang = lang;
       const t = I18N[lang];
@@ -848,12 +870,11 @@
       langDropdown.classList.remove('open');
     }
 
-    langDropdownBtn.addEventListener('click', e => { e.stopPropagation(); langDropdown.classList.toggle('open'); });
+    langDropdownBtn.addEventListener('click', e => { e.stopPropagation(); openDropdown(langDropdown); });
     langDropdown.querySelector('.dropdown-menu').addEventListener('click', e => e.stopPropagation());
     langDropdown.querySelectorAll('[data-lang]').forEach(el => {
       el.addEventListener('click', () => setLang(el.dataset.lang));
     });
-    document.addEventListener('click', () => { langDropdown.classList.remove('open'); });
 
     setLang('de');
   </script>
