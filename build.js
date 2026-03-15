@@ -11,6 +11,9 @@ const VERSION_DETECT = [
   { re: /\(Audiodeskription\)/i, label: 'AD' },
   { re: /\(mit Untertitel\)/i, label: 'UT' },
   { re: /\(Originalversion\)/i, label: 'OV' },
+  { re: /\(Gebärdensprache\)/i, label: 'GL' },
+  { re: /\(Französisch\)/i, label: 'FR' },
+  { re: /\(Englisch\)/i, label: 'EN' },
 ];
 
 function detectVersion(title) {
@@ -31,6 +34,9 @@ function cleanTitle(title) {
     .replace(/\s*\(Originalversion mit Untertitel\)/gi, '')
     .replace(/\s*\(Originalversion\)/gi, '')
     .replace(/\s*\([^)]*[Uu]ntertitel[^)]*\)/g, '')
+    .replace(/\s*\(Gebärdensprache\)/gi, '')
+    .replace(/\s*\(Französisch\)/gi, '')
+    .replace(/\s*\(Englisch\)/gi, '')
     .replace(/\s*-\s*Spielfilm.*$/i, '')
     .trim();
 }

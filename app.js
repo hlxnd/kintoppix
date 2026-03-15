@@ -256,7 +256,7 @@ const I18N = {
     open: 'Öffnen',
     moreInfo: 'Mehr Infos →',
     genreMap: { 'Action':'Action','Adventure':'Abenteuer','Animation':'Animation','Comedy':'Komödie','Crime':'Krimi','Documentary':'Dokumentarfilm','Drama':'Drama','Family':'Familie','Fantasy':'Fantasy','History':'Geschichte','Horror':'Horror','Music':'Musik','Mystery':'Mystery','Romance':'Romantik','Science Fiction':'Science-Fiction','TV Movie':'TV-Film','Thriller':'Thriller','War':'Kriegsfilm','Western':'Western' },
-    versionLabels: { AD:{short:'AD',tip:'Audiodeskription'}, OmU:{short:'OmU',tip:'Originalversion mit Untertiteln'}, UT:{short:'UT',tip:'Untertitel'}, OV:{short:'OV',tip:'Originalversion'} }
+    versionLabels: { AD:{short:'AD',tip:'Audiodeskription'}, OmU:{short:'OmU',tip:'Originalversion mit Untertiteln'}, UT:{short:'UT',tip:'Untertitel'}, OV:{short:'OV',tip:'Originalversion'}, GL:{short:'DGS',tip:'Gebärdensprache'}, FR:{short:'FR',tip:'Französisch'}, EN:{short:'EN',tip:'Englisch'} }
   },
   fr: {
     subtitle: 'Streaming gratuit des chaînes publiques',
@@ -271,7 +271,7 @@ const I18N = {
     open: 'Ouvrir',
     moreInfo: 'Plus d\'infos →',
     genreMap: { 'Action':'Action','Adventure':'Aventure','Animation':'Animation','Comedy':'Comédie','Crime':'Policier','Documentary':'Documentaire','Drama':'Drame','Family':'Famille','Fantasy':'Fantastique','History':'Histoire','Horror':'Horreur','Music':'Musique','Mystery':'Mystère','Romance':'Romance','Science Fiction':'Science-fiction','TV Movie':'Téléfilm','Thriller':'Thriller','War':'Guerre','Western':'Western' },
-    versionLabels: { AD:{short:'AD',tip:'Audiodescription'}, OmU:{short:'VOST',tip:'Version originale sous-titrée'}, UT:{short:'ST',tip:'Sous-titres'}, OV:{short:'VO',tip:'Version originale'} }
+    versionLabels: { AD:{short:'AD',tip:'Audiodescription'}, OmU:{short:'VOST',tip:'Version originale sous-titrée'}, UT:{short:'ST',tip:'Sous-titres'}, OV:{short:'VO',tip:'Version originale'}, GL:{short:'LSF',tip:'Langue des signes'}, FR:{short:'FR',tip:'Français'}, EN:{short:'EN',tip:'Anglais'} }
   },
   en: {
     subtitle: 'Free streaming from Public Broadcasters',
@@ -286,7 +286,7 @@ const I18N = {
     open: 'Open',
     moreInfo: 'More info →',
     genreMap: {},
-    versionLabels: { AD:{short:'AD',tip:'Audio Description'}, OmU:{short:'OST',tip:'Original with subtitles'}, UT:{short:'Subs',tip:'Subtitles'}, OV:{short:'OV',tip:'Original version'} }
+    versionLabels: { AD:{short:'AD',tip:'Audio Description'}, OmU:{short:'OST',tip:'Original with subtitles'}, UT:{short:'Subs',tip:'Subtitles'}, OV:{short:'OV',tip:'Original version'}, GL:{short:'SL',tip:'Sign Language'}, FR:{short:'FR',tip:'French'}, EN:{short:'EN',tip:'English'} }
   }
 };
 
